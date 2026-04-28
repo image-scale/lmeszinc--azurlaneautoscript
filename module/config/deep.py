@@ -1,6 +1,20 @@
 """Deep access utilities for nested dictionaries."""
 
 
+def _to_keys(keys):
+    """Convert keys to list format.
+
+    Args:
+        keys: String with dot notation or list of keys
+
+    Returns:
+        List of keys
+    """
+    if isinstance(keys, str):
+        return keys.split('.')
+    return list(keys)
+
+
 def deep_get(d, keys, default=None):
     """Get value from nested dictionary using dot notation or list of keys.
 
@@ -12,7 +26,13 @@ def deep_get(d, keys, default=None):
     Returns:
         Value at the key path or default
     """
-    raise NotImplementedError
+    keys = _to_keys(keys)
+    current = d
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            return default
+        current = current[key]
+    return current
 
 
 def deep_set(d, keys, value):
@@ -23,7 +43,13 @@ def deep_set(d, keys, value):
         keys: String with dot notation or list of keys
         value: Value to set
     """
-    raise NotImplementedError
+    keys = _to_keys(keys)
+    current = d
+    for key in keys[:-1]:
+        if key not in current:
+            current[key] = {}
+        current = current[key]
+    current[keys[-1]] = value
 
 
 def deep_exist(d, keys):
@@ -36,7 +62,13 @@ def deep_exist(d, keys):
     Returns:
         True if key path exists
     """
-    raise NotImplementedError
+    keys = _to_keys(keys)
+    current = d
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            return False
+        current = current[key]
+    return True
 
 
 def deep_default(d, keys, default):
@@ -47,7 +79,8 @@ def deep_default(d, keys, default):
         keys: String with dot notation or list of keys
         default: Default value to set if not exists
     """
-    raise NotImplementedError
+    if not deep_exist(d, keys):
+        deep_set(d, keys, default)
 
 
 def deep_pop(d, keys, default=None):
@@ -61,4 +94,13 @@ def deep_pop(d, keys, default=None):
     Returns:
         Popped value or default
     """
-    raise NotImplementedError
+    keys = _to_keys(keys)
+    current = d
+    for key in keys[:-1]:
+        if not isinstance(current, dict) or key not in current:
+            return default
+        current = current[key]
+
+    if not isinstance(current, dict) or keys[-1] not in current:
+        return default
+    return current.pop(keys[-1])
