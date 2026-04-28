@@ -1,0 +1,1 @@
+"""Generated configuration for AzurLaneAutoScript."""
